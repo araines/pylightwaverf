@@ -1,4 +1,5 @@
 import socket
+import re
 
 class LightWaveRF():
 
@@ -25,14 +26,38 @@ class LightWaveRF():
 		# Set the initial msg_id
 		self.msg_id = 1
 
-		# Set the initial WiFiLink IP Address
-		self.wifilink_ip = None
+		# Find the WiFiLink
+		self.wifilink_ip = self.locate_wifilink()
 
 
 	def locate_wifilink(self):
 		msg_data = '@?v'
-		data, ip = self.send(msg_data, broadcast=True)
-		self.wifilink_ip = ip
+		try:
+			data, ip = self.send(msg_data, broadcast=True)
+		except socket.timeout:
+			return None
+
+		valid    = re.compile(r'^\d{1,3},\?V=(.*)\r\n$')
+		match    = valid.match(data)
+		if match:
+			return ip
+		return None
+
+
+	def get_power(self):
+		msg_data = '@?W'
+		data, ip = self.send(msg_data)
+		valid    = re.compile(r'^\d{1,3},\?W=([0-9,]+)\r\n$')
+		match    = valid.match(data)
+		if match:
+			power = match.group(1).split(',')
+			return {
+				'current':         power[0],
+				'max_today':       power[1],
+				'total_today':     power[2],
+				'total_yesterday': power[3],
+			}
+		return None
 
 
 	def control(self, room=None, device=None, state=None, msg1=None, msg2=None):
