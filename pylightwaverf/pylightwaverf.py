@@ -143,6 +143,12 @@ class Device():
 		self._send_command(command)
 		self._state = state
 
+	def pair(self):
+		'''
+		Call this once device is in pairing mode to pair the device
+		'''
+		self.state = STATE_ON
+
 	def _send_command(self, command):
 		room   = self.room.number
 		device = self.number
