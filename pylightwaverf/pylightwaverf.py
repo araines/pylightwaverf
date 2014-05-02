@@ -91,3 +91,60 @@ class LightWaveRF():
 			msg_id = 1
 		self.msg_id = msg_id
 		return '%03d' % msg_id
+
+
+class Room():
+
+	def __init__(self, number):
+		self.number  = number
+		self.name    = None
+		self.devices = []
+		self.moods   = []
+
+	def add_device(self, device):
+		if device.__class__ is not Device:
+			raise Exception('device: %s is not a Device' % device)
+		self.devices.append(device)
+
+
+class Device():
+
+	STATE_OFF  = 'OFF'
+	STATE_ON   = 'ON'
+	STATE_LOW  = 'LOW'
+	STATE_MED  = 'MED'
+	STATE_HIGH = 'HIGH'
+	STATES = {
+		STATE_OFF  : 'F0',
+		STATE_ON   : 'F1',
+		STATE_LOW  : 'FdP8',
+		STATE_MED  : 'FdP16',
+		STATE_HIGH : 'FdP24',
+	}
+
+	def __init__(self, room, number, name=None, state=None):
+		self.room    = room
+		self.number  = number
+		self.name    = name
+		self.type    = type
+		self._state  = state
+
+	@property
+	def state(self):
+		return self._state
+	@state.setter
+	def state(self, state):
+		if 0 <= state <= 100:
+			command = 'FdP' + str(int(state * 0.32))
+		elif STATES.get(state):
+			command = STATES.get(state)
+		else:
+			raise Exception('State not recognised')
+		self._send_command(command)
+		self._state = state
+
+	def _send_command(self, command):
+		room   = self.room.number
+		device = self.number
+		msg    = room + device + cammand
+		#TODO: Send command
